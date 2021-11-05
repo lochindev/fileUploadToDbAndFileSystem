@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/attachment")
@@ -28,5 +29,15 @@ public class AttachmentController {
         return attachmentService.download(id);
     }
 
+    @PostMapping("/uploadToFileSystem")
+    public HttpEntity<?> uploadToFileSystem(MultipartHttpServletRequest request) throws IOException {
+        return ResponseEntity.ok(attachmentService.uploadToFileSystem(request));
+    }
+
+
+    @GetMapping("/dowloadFromFileSystem/{id}")
+    public HttpEntity<?> dowloadFromFileSystem(@PathVariable Integer id) throws IOException {
+        return attachmentService.dowloadFromFileSystem(id);
+    }
 
 }

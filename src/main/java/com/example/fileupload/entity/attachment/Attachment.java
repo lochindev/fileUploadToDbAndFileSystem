@@ -19,6 +19,7 @@ public class Attachment {
     private Integer id;
 
     private String name;
+    private String fileName;
     private double size;
     private String contentType;
     private String filePath;

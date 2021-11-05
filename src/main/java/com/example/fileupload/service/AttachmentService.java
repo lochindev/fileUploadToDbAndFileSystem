@@ -13,10 +13,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class AttachmentService {
@@ -70,6 +75,39 @@ public class AttachmentService {
                                 .contentType(MediaType.parseMediaType(byId.getContentType()))
                                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment:file=\""+ byId.getId() + "\"")
                                 .body(byAttachment.getBytes());
+        }
+
+        public String uploadToFileSystem(MultipartHttpServletRequest request) throws IOException {
+                Iterator<String> fileNames = request.getFileNames();
+                MultipartFile file = request.getFile(fileNames.next());
+                if (file != null) {
+                        Attachment attechment = new Attachment();
+                        attechment.setName(file.getOriginalFilename());
+                        attechment.setContentType(file.getContentType());
+                        attechment.setSize(file.getSize());
+                        attechment = attachmentRepository.save(attechment);
+                        String[] split = file.getOriginalFilename().split("\\.");
+                        String name = UUID.randomUUID()+"_"+file.getOriginalFilename(); // + "." + split[split.length - 1] // .png
+                        attechment.setFileName(name);
+                        Path path = Paths.get("E:\\new files\\" + name);
+                        Files.copy(file.getInputStream(), path);
+                        attechment.setFilePath(path.toString());
+                        attachmentRepository.save(attechment);
+                        return "Saved";
+                }
+                return null;
+        }
+
+
+
+        public HttpEntity<?> dowloadFromFileSystem(Integer id) throws IOException {
+                Attachment byId = attachmentRepository.getById(id);
+                File file=new File(byId.getFilePath());
+                byte[] bytes = Files.readAllBytes(file.toPath());
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(byId.getContentType()))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + byId.getName() + "\"")
+                        .body(bytes);
         }
 }
 
